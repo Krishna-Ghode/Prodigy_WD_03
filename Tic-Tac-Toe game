@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tic Tac Toe with AI</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
+    }
+
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 20px;
+      color: #fff;
+      text-shadow: 1px 1px 5px rgba(0,0,0,0.3);
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-template-rows: repeat(3, 100px);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .cell {
+      background-color: #ffffffcc;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .cell:hover {
+      background-color: #f0f0f0;
+      transform: scale(1.05);
+    }
+
+    .status {
+      font-size: 1.3rem;
+      color: #fff;
+      margin-bottom: 10px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+
+    button {
+      padding: 10px 25px;
+      font-size: 1rem;
+      background-color: #ffffffcc;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    button:hover {
+      background-color: #e0e0e0;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Tic Tac Toe</h1>
+  <div class="board" id="board"></div>
+  <div class="status" id="status">Your turn (X)</div>
+  <button onclick="resetGame()">🔁 Reset Game</button>
+
+  <script>
+    const board = document.getElementById('board');
+    const statusText = document.getElementById('status');
+    let cells = Array(9).fill(null);
+    let gameActive = true;
+
+    const player = 'X';
+    const ai = 'O';
+
+    const winConditions = [
+      [0,1,2], [3,4,5], [6,7,8],
+      [0,3,6], [1,4,7], [2,5,8],
+      [0,4,8], [2,4,6]
+    ];
+
+    function createBoard() {
+      board.innerHTML = '';
+      cells.forEach((cell, index) => {
+        const div = document.createElement('div');
+        div.classList.add('cell');
+        div.dataset.index = index;
+        div.addEventListener('click', handlePlayerClick);
+        board.appendChild(div);
+      });
+    }
+
+    function handlePlayerClick(e) {
+      const index = e.target.dataset.index;
+      if (cells[index] || !gameActive) return;
+
+      makeMove(index, player);
+      if (gameActive) {
+        setTimeout(aiMove, 500); // AI thinks briefly
+      }
+    }
+
+    function makeMove(index, symbol) {
+      cells[index] = symbol;
+      board.children[index].textContent = symbol;
+
+      if (checkWinner(symbol)) {
+        statusText.textContent = symbol === player ? "🎉 You win!" : "😈 AI wins!";
+        gameActive = false;
+      } else if (cells.every(cell => cell)) {
+        statusText.textContent = "🤝 It's a draw!";
+        gameActive = false;
+      } else {
+        statusText.textContent = symbol === player ? "AI's turn (O)..." : "Your turn (X)";
+      }
+    }
+
+    function aiMove() {
+      let index = getBestMove();
+      makeMove(index, ai);
+    }
+
+    function getBestMove() {
+      // Try to win
+      for (let i = 0; i < 9; i++) {
+        if (!cells[i]) {
+          cells[i] = ai;
+          if (checkWinner(ai)) {
+            cells[i] = null;
+            return i;
+          }
+          cells[i] = null;
+        }
+      }
+
+      // Try to block player
+      for (let i = 0; i < 9; i++) {
+        if (!cells[i]) {
+          cells[i] = player;
+          if (checkWinner(player)) {
+            cells[i] = null;
+            return i;
+          }
+          cells[i] = null;
+        }
+      }
+
+      // Pick random empty cell
+      const emptyCells = cells.map((val, i) => val ? null : i).filter(val => val !== null);
+      return emptyCells[Math.floor(Math.random() * emptyCells.length)];
+    }
+
+    function checkWinner(symbol) {
+      return winConditions.some(condition => {
+        const [a, b, c] = condition;
+        return cells[a] === symbol && cells[b] === symbol && cells[c] === symbol;
+      });
+    }
+
+    function resetGame() {
+      cells = Array(9).fill(null);
+      gameActive = true;
+      statusText.textContent = "Your turn (X)";
+      createBoard();
+    }
+
+    createBoard();
+  </script>
+
+</body>
+</html>
